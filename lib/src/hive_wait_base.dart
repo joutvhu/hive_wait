@@ -41,25 +41,29 @@ class HiveRepository<E> {
   @mustCallSuper
   Future<BoxBase<E>> init([HiveInterface? hive]) async {
     this.hive = hive ?? Hive;
+    return await _init();
+  }
+
+  Future<BoxBase<E>> _init() async {
     if (lazy) {
-      box = await this.hive.openLazyBox<E>(
-            name,
-            encryptionCipher: encryptionCipher,
-            keyComparator: keyComparator,
-            compactionStrategy: compactionStrategy,
-            crashRecovery: crashRecovery,
-            path: boxPath,
-          );
+      box = await hive.openLazyBox<E>(
+        name,
+        encryptionCipher: encryptionCipher,
+        keyComparator: keyComparator,
+        compactionStrategy: compactionStrategy,
+        crashRecovery: crashRecovery,
+        path: boxPath,
+      );
     } else {
-      box = await this.hive.openBox<E>(
-            name,
-            encryptionCipher: encryptionCipher,
-            keyComparator: keyComparator,
-            compactionStrategy: compactionStrategy,
-            crashRecovery: crashRecovery,
-            path: boxPath,
-            bytes: bytes,
-          );
+      box = await hive.openBox<E>(
+        name,
+        encryptionCipher: encryptionCipher,
+        keyComparator: keyComparator,
+        compactionStrategy: compactionStrategy,
+        crashRecovery: crashRecovery,
+        path: boxPath,
+        bytes: bytes,
+      );
     }
     return box;
   }
@@ -67,7 +71,7 @@ class HiveRepository<E> {
   @mustCallSuper
   Future<void> reopen() async {
     await _ready;
-    _ready = init(hive);
+    _ready = _init();
   }
 
   Future<bool> get isOpen async {

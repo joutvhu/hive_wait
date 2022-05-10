@@ -12,12 +12,12 @@ class CoreRepository<E> extends HiveRepository<E> {
   CoreRepository(
     String name, {
     bool? lazy,
-    final HiveCipher? encryptionCipher,
-    final KeyComparator? keyComparator,
-    final CompactionStrategy? compactionStrategy,
-    final bool? crashRecovery,
-    final String? boxPath,
-    final Uint8List? bytes,
+    HiveCipher? encryptionCipher,
+    KeyComparator? keyComparator,
+    CompactionStrategy? compactionStrategy,
+    bool? crashRecovery,
+    String? boxPath,
+    Uint8List? bytes,
   }) : super(
           name,
           lazy: lazy,
@@ -49,7 +49,7 @@ class CoreRepository<E> extends HiveRepository<E> {
   @override
   Future<BoxBase<E>> init([HiveInterface? hive]) async {
     await getIt.allReady();
-    var hive = await getIt.getAsync<HiveInterface>();
+    hive = await getIt.getAsync<HiveInterface>();
     return await super.init(Hive);
   }
 }
