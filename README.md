@@ -1,2 +1,1 @@
-# hiverepo
-Hive repository
+# Hive Repository
