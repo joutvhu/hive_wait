@@ -1,7 +1,7 @@
-name: hiverepo
-description: Hive repository
+name: hive_wait
+description: Hive repository to calling methods in the box as async. Wait until Hive is ready to use.
 version: 1.0.0
-homepage: https://github.com/joutvhu/hiverepo
+homepage: https://github.com/joutvhu/hive_wait
 
 environment:
   sdk: '>=2.16.2 <3.0.0'
