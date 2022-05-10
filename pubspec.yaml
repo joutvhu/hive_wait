@@ -1,5 +1,5 @@
 name: hive_wait
-description: Hive repository to calling methods in the box as async. Wait until Hive is ready to use.
+description: Wait until the Hive is ready to use before calling the box's methods.
 version: 1.0.0
 homepage: https://github.com/joutvhu/hive_wait
 

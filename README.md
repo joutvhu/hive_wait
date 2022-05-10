@@ -1,6 +1,7 @@
-# Hive Repository
+# Hive Wait
 
-Hive repository to calling methods in the box as async. Wait until Hive is ready to use.
+Hive Wait provide a Hive repository to calling methods in the box as async.
+Wait until the Hive is ready to use before calling the box's methods.
 
 ## Usage
 
