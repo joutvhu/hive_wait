@@ -6,8 +6,9 @@ import 'package:hive/hive.dart';
 import 'package:hive/src/box/default_compaction_strategy.dart';
 // ignore: implementation_imports
 import 'package:hive/src/box/default_key_comparator.dart';
+import 'package:meta/meta.dart';
 
-class Repository<E> {
+class HiveRepository<E> {
   final String name;
   final bool lazy;
   final HiveCipher? encryptionCipher;
@@ -21,19 +22,23 @@ class Repository<E> {
   late Future<BoxBase<E>> _ready;
   late BoxBase<E> box;
 
-  Repository(
+  HiveRepository(
     this.name, {
-    this.lazy = true,
+    bool? lazy,
     this.encryptionCipher,
-    this.keyComparator = defaultKeyComparator,
-    this.compactionStrategy = defaultCompactionStrategy,
-    this.crashRecovery = true,
+    KeyComparator? keyComparator,
+    CompactionStrategy? compactionStrategy,
+    bool? crashRecovery,
     this.boxPath,
     this.bytes,
-  }) {
+  })  : lazy = lazy ?? true,
+        keyComparator = keyComparator ?? defaultKeyComparator,
+        compactionStrategy = compactionStrategy ?? defaultCompactionStrategy,
+        crashRecovery = crashRecovery ?? true {
     _ready = init();
   }
 
+  @mustCallSuper
   Future<BoxBase<E>> init([HiveInterface? hive]) async {
     this.hive = hive ?? Hive;
     if (lazy) {
@@ -57,6 +62,12 @@ class Repository<E> {
           );
     }
     return box;
+  }
+
+  @mustCallSuper
+  Future<void> reopen() async {
+    await _ready;
+    _ready = init(hive);
   }
 
   Future<bool> get isOpen async {
@@ -188,7 +199,14 @@ class Repository<E> {
     return box is Box<E> ? (box as Box<E>).toMap() : null;
   }
 
-  Future<void> destroy() {
+  @mustCallSuper
+  Future<void> close() async {
+    await _ready;
+    box.close();
+  }
+
+  @mustCallSuper
+  FutureOr<void> destroy() {
     return _ready.then((value) => box.close());
   }
 }

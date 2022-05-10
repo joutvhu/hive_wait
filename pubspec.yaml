@@ -1,5 +1,5 @@
 name: hiverepo
-description: A starting point for Dart libraries or applications.
+description: Hive repository
 version: 1.0.0
 homepage: https://github.com/joutvhu/hiverepo
 
@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   hive: ^2.1.0
+  meta: ^1.7.0
 
 dev_dependencies:
   lints: ^1.0.0
