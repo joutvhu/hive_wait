@@ -50,8 +50,13 @@ class CoreRepository<E> extends HiveRepository<E> {
   Future<BoxBase<E>> init([HiveInterface? hive]) async {
     await getIt.allReady();
     hive = await getIt.getAsync<HiveInterface>();
-    return await super.init(Hive);
+    return await super.init(hive);
   }
+}
+
+// TODO: register a singleton with get_it
+class PropertyRepository extends CoreRepository<Property> {
+  PropertyRepository() : super('property');
 }
 ```
 
