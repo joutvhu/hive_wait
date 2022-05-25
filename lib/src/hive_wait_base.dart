@@ -1,10 +1,13 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: implementation_imports
+
 import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:hive/hive.dart';
-// ignore: implementation_imports
+import 'package:hive/src/box/box_base_impl.dart';
 import 'package:hive/src/box/default_compaction_strategy.dart';
-// ignore: implementation_imports
 import 'package:hive/src/box/default_key_comparator.dart';
 import 'package:meta/meta.dart';
 
@@ -68,6 +71,19 @@ class HiveRepository<E> {
     return box;
   }
 
+  BoxBaseImpl<E>? get _baseBox {
+    return box is BoxBaseImpl<E> ? box as BoxBaseImpl<E> : null;
+  }
+
+  BoxBaseImpl<E>? get _baseBoxOpened {
+    BoxBaseImpl<E>? baseBox = _baseBox;
+    if (baseBox != null) {
+      baseBox.checkOpen();
+      return baseBox;
+    }
+    return null;
+  }
+
   @mustCallSuper
   Future<void> reopen() async {
     await _ready;
@@ -106,12 +122,14 @@ class HiveRepository<E> {
 
   Future<Iterable<E>?> get values async {
     await _ready;
-    return box is Box<E> ? (box as Box<E>).values : null;
+    if (box is Box<E>) return (box as Box<E>).values;
+    return _baseBoxOpened?.keystore.getValues();
   }
 
   Future<Iterable<E>?> valuesBetween({dynamic startKey, dynamic endKey}) async {
     await _ready;
-    return box is Box<E> ? (box as Box<E>).valuesBetween(startKey: startKey, endKey: endKey) : null;
+    if (box is Box<E>) return (box as Box<E>).valuesBetween(startKey: startKey, endKey: endKey);
+    return _baseBoxOpened?.keystore.getValuesBetween(startKey, endKey);
   }
 
   Future<E?> get(dynamic key, {E? defaultValue}) async {
@@ -200,7 +218,17 @@ class HiveRepository<E> {
 
   Future<Map<dynamic, E>?> toMap() async {
     await _ready;
-    return box is Box<E> ? (box as Box<E>).toMap() : null;
+    if (box is Box<E>) return (box as Box<E>).toMap();
+
+    BoxBaseImpl<E>? baseBox = _baseBox;
+    if (baseBox != null) {
+      var map = <dynamic, E>{};
+      for (var frame in baseBox.keystore.frames) {
+        map[frame.key] = frame.value as E;
+      }
+      return map;
+    }
+    return null;
   }
 
   @mustCallSuper
