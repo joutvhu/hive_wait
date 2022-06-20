@@ -123,7 +123,20 @@ class HiveRepository<E> {
   Future<Iterable<E>?> get values async {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).values;
-    return _baseBoxOpened?.keystore.getValues();
+    var keys = _baseBoxOpened?.keystore.getKeys();
+    return _getValuesByKeys(keys);
+  }
+
+  Future<Iterable<E>?> _getValuesByKeys(Iterable<dynamic>? keys) async {
+    if (keys != null) {
+      var result = await Future.wait(keys
+          .map((key) => _baseBoxOpened?.keystore.get(key))
+          .where((frame) => frame != null)
+          .map((frame) => _baseBoxOpened?.backend.readValue(frame!))
+          .cast<Future<dynamic>>());
+      return result.cast<E>();
+    }
+    return null;
   }
 
   Future<Iterable<E>?> valuesBetween({dynamic startKey, dynamic endKey}) async {
