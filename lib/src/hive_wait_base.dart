@@ -135,7 +135,7 @@ class HiveRepository<E> {
   }
 
   Future<E> _getByFrame(Frame frame) async {
-    var value = await _baseBoxOpened?.backend.readValue(frame);
+    var value = await _baseBox?.backend.readValue(frame);
     if (value is HiveObjectMixin) {
       value.init(frame.key, box);
     }
@@ -252,7 +252,7 @@ class HiveRepository<E> {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).toMap();
 
-    BoxBaseImpl<E>? baseBox = _baseBox;
+    BoxBaseImpl<E>? baseBox = _baseBoxOpened;
     if (baseBox != null) {
       Map<dynamic, E> map = <dynamic, E>{};
       for (var frame in baseBox.keystore.frames) {

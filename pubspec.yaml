@@ -1,6 +1,6 @@
 name: hive_wait
 description: Wait until the Hive is ready to use before calling the box's methods.
-version: 1.0.2+1
+version: 1.0.2+2
 homepage: https://github.com/joutvhu/hive_wait
 
 environment:
