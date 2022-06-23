@@ -87,8 +87,8 @@ class HiveRepository<E> {
     return null;
   }
 
-  IndexableSkipList<dynamic, Frame> get store {
-    return (_baseBoxOpened?.keystore as dynamic)._store;
+  IndexableSkipList<dynamic, Frame>? get store {
+    return (_baseBoxOpened?.keystore as dynamic)?._store;
   }
 
   @mustCallSuper
@@ -130,8 +130,8 @@ class HiveRepository<E> {
   Future<Iterable<E>?> get values async {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).values;
-    var keys = _baseBoxOpened?.keystore.getKeys();
-    return _getValuesByKeys(keys);
+    Iterable<Frame> frames = _baseBoxOpened?.keystore.frames ?? [];
+    return await Future.wait(frames.map(_getByFrame));
   }
 
   Future<E> _getByFrame(Frame frame) async {
@@ -142,43 +142,26 @@ class HiveRepository<E> {
     return value as E;
   }
 
-  Future<Iterable<E>?> _getValuesByKeys(Iterable<dynamic>? keys) async {
-    if (keys != null) {
-      return await Future.wait(keys
-          .map((key) => _baseBoxOpened?.keystore.get(key))
-          .where((frame) => frame != null)
-          .cast<Frame>()
-          .map(_getByFrame));
-    }
-    return null;
-  }
-
   Future<Iterable<E>?> valuesBetween({dynamic startKey, dynamic endKey}) async {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).valuesBetween(startKey: startKey, endKey: endKey);
-    return _getValuesBetweenLazy(startKey, endKey);
+    return await Future.wait(_getFrameBetween(startKey, endKey).map(_getByFrame));
   }
 
-  Future<Iterable<E>?> _getValuesBetweenLazy([dynamic startKey, dynamic endKey]) async {
-    Iterable<Frame> iterable;
+  Iterable<Frame> _getFrameBetween([dynamic startKey, dynamic endKey]) sync* {
+    Iterable<Frame>? iterable;
     if (startKey != null) {
-      iterable = store.valuesFromKey(startKey);
+      iterable = store?.valuesFromKey(startKey);
     } else {
-      iterable = store.values;
+      iterable = _baseBoxOpened?.keystore.frames;
     }
 
-    bool _isFinished = false;
-    iterable = iterable.where((frame) {
-      if (_isFinished) {
-        return false;
+    if (iterable != null) {
+      for (var frame in iterable) {
+        yield frame;
+        if (frame.key == endKey) break;
       }
-      if (frame.key == endKey) {
-        _isFinished = true;
-      }
-      return true;
-    });
-
-    return await Future.wait(iterable.map(_getByFrame));
+    }
   }
 
   Future<E?> get(dynamic key, {E? defaultValue}) async {
@@ -271,9 +254,9 @@ class HiveRepository<E> {
 
     BoxBaseImpl<E>? baseBox = _baseBox;
     if (baseBox != null) {
-      var map = <dynamic, E>{};
+      Map<dynamic, E> map = <dynamic, E>{};
       for (var frame in baseBox.keystore.frames) {
-        map[frame.key] = frame.value as E;
+        map[frame.key] = await _getByFrame(frame);
       }
       return map;
     }
