@@ -87,7 +87,7 @@ class HiveRepository<E> {
     return null;
   }
 
-  IndexableSkipList<dynamic, Frame>? get store {
+  IndexableSkipList<dynamic, Frame>? get _store {
     return (_baseBoxOpened?.keystore as dynamic)?._store;
   }
 
@@ -151,7 +151,7 @@ class HiveRepository<E> {
   Iterable<Frame> _getFrameBetween([dynamic startKey, dynamic endKey]) sync* {
     Iterable<Frame>? iterable;
     if (startKey != null) {
-      iterable = store?.valuesFromKey(startKey);
+      iterable = _store?.valuesFromKey(startKey);
     } else {
       iterable = _baseBoxOpened?.keystore.frames;
     }
