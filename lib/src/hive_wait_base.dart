@@ -145,10 +145,10 @@ class HiveRepository<E> {
   Future<Iterable<E>?> valuesBetween({dynamic startKey, dynamic endKey}) async {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).valuesBetween(startKey: startKey, endKey: endKey);
-    return await Future.wait(_getFrameBetween(startKey, endKey).map(_getByFrame));
+    return await Future.wait(_getFramesBetween(startKey, endKey).map(_getByFrame));
   }
 
-  Iterable<Frame> _getFrameBetween([dynamic startKey, dynamic endKey]) sync* {
+  Iterable<Frame> _getFramesBetween([dynamic startKey, dynamic endKey]) sync* {
     Iterable<Frame>? iterable;
     if (startKey != null) {
       iterable = _store?.valuesFromKey(startKey);
