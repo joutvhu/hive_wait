@@ -6,9 +6,12 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:hive/hive.dart';
+import 'package:hive/src/binary/frame.dart';
 import 'package:hive/src/box/box_base_impl.dart';
 import 'package:hive/src/box/default_compaction_strategy.dart';
 import 'package:hive/src/box/default_key_comparator.dart';
+import 'package:hive/src/object/hive_object.dart';
+import 'package:hive/src/util/indexable_skip_list.dart';
 import 'package:meta/meta.dart';
 
 class HiveRepository<E> {
@@ -84,6 +87,10 @@ class HiveRepository<E> {
     return null;
   }
 
+  IndexableSkipList<dynamic, Frame> get store {
+    return (_baseBoxOpened?.keystore as dynamic)._store;
+  }
+
   @mustCallSuper
   Future<void> reopen() async {
     await _ready;
@@ -127,14 +134,21 @@ class HiveRepository<E> {
     return _getValuesByKeys(keys);
   }
 
+  Future<E> _getByFrame(Frame frame) async {
+    var value = await _baseBoxOpened?.backend.readValue(frame);
+    if (value is HiveObjectMixin) {
+      value.init(frame.key, box);
+    }
+    return value as E;
+  }
+
   Future<Iterable<E>?> _getValuesByKeys(Iterable<dynamic>? keys) async {
     if (keys != null) {
-      var result = await Future.wait(keys
+      return await Future.wait(keys
           .map((key) => _baseBoxOpened?.keystore.get(key))
           .where((frame) => frame != null)
-          .map((frame) => _baseBoxOpened?.backend.readValue(frame!))
-          .cast<Future<dynamic>>());
-      return result.cast<E>();
+          .cast<Frame>()
+          .map(_getByFrame));
     }
     return null;
   }
@@ -142,7 +156,29 @@ class HiveRepository<E> {
   Future<Iterable<E>?> valuesBetween({dynamic startKey, dynamic endKey}) async {
     await _ready;
     if (box is Box<E>) return (box as Box<E>).valuesBetween(startKey: startKey, endKey: endKey);
-    return _baseBoxOpened?.keystore.getValuesBetween(startKey, endKey);
+    return _getValuesBetweenLazy(startKey, endKey);
+  }
+
+  Future<Iterable<E>?> _getValuesBetweenLazy([dynamic startKey, dynamic endKey]) async {
+    Iterable<Frame> iterable;
+    if (startKey != null) {
+      iterable = store.valuesFromKey(startKey);
+    } else {
+      iterable = store.values;
+    }
+
+    bool _isFinished = false;
+    iterable = iterable.where((frame) {
+      if (_isFinished) {
+        return false;
+      }
+      if (frame.key == endKey) {
+        _isFinished = true;
+      }
+      return true;
+    });
+
+    return await Future.wait(iterable.map(_getByFrame));
   }
 
   Future<E?> get(dynamic key, {E? defaultValue}) async {
